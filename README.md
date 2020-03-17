@@ -29,6 +29,27 @@ $ pip install git+https://github.com/filangel/yagw.git
 
 ## Get Started
 
+You can instantiate a simple environment by running:
 
+```python
+from yagw.dm_env_interface import GridWorld
+
+# Init a simple, single maze environment.
+env = GridWorld(num_layouts=1, max_steps_count=50)
+timestep = env.reset()
+
+# RL loop:
+while not timestep.last():
+  # Random action.
+  action env.action_spec().generate_value()
+  # Step in the simulator.
+  timestep = env.step(action)
+```
 
 ## Dependencies
+
+The code was tested under Ubuntu 18.04 and macOS with the Miniconda Python distribution and uses these packages (as listed in [`setup.py`](./setup.py)):
+
+* [`labmaze==1.0.2`](https://pypi.org/project/labmaze/1.0.2/)
+* [`dm-env==1.2`](https://pypi.org/project/dm-env/1.2/)
+* [`pycolab==1.2`](https://pypi.org/project/pycolab/1.2/)
