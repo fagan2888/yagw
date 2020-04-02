@@ -38,6 +38,7 @@ setup(
         "labmaze==1.0.2",
         "dm-env==1.2",
         "pycolab==1.2",
+        "matplotlib==3.2.1",
     ],
     classifiers=[
         "Development Status :: 3 - Alpha",
