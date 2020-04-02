@@ -18,10 +18,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from typing import Optional, Text, Union
+
 import dm_env
 import numpy as np
+import matplotlib.pyplot as plt
 
-from .pycolab_interface import make_game, Observation, ObservationToFeatureArray
+from .pycolab_interface import make_game, Observation, ObservationToArray, ObservationToFeatureArray
 
 
 class GridWorld(dm_env.Environment):
@@ -50,14 +53,16 @@ class GridWorld(dm_env.Environment):
     self._max_steps_count = max_steps_count
     self._steps_count = 0
     self._state = None
-    self._np_random = np.random.RandomState(None) # pylint: disable=no-member
+    self._np_random = np.random.RandomState(None)  # pylint: disable=no-member
     self._layout_ids = self._np_random.randint(
         int(1e6),
         size=num_layouts if num_layouts != -1 else int(1e6),
     )
     self._current_layout_id = self._np_random.choice(self._layout_ids)
-
+    # Pycolab game.
     self._game = make_game(seed=self._current_layout_id)
+    # Renderer.
+    self._renderer = dict()
 
   def observation_spec(self) -> dm_env.specs.BoundedArray:
     """Returns the observation spec."""
@@ -78,7 +83,7 @@ class GridWorld(dm_env.Environment):
 
   def seed(self, state: int) -> None:
     """Sets random number generators' state."""
-    self._np_random = np.random.RandomState(state) # pylint: disable=no-member
+    self._np_random = np.random.RandomState(state)  # pylint: disable=no-member
 
   def reset(self) -> dm_env.TimeStep:
     """Returns the first `TimeStep` of a new episode.
@@ -120,6 +125,61 @@ class GridWorld(dm_env.Environment):
       return dm_env.termination(reward, self._state)
     else:
       return dm_env.transition(reward, self._state)
+
+  def render(
+      self,
+      mode: Text = "human",
+  ) -> Optional[Union[np.ndarray, Text]]:
+    """Renders the environment.
+    
+    Args:
+      mode: OpenAI Gym rendering modes:
+        - `human`: render to the current display or terminal and
+            return nothing. Usually for human consumption.
+        - `rgb_array`: Return an numpy.ndarray with shape (x, y, 3),
+            representing RGB values for an x-by-y pixel image, suitable
+            for turning into a video.
+        - `ansi`: Return a string (str) or StringIO.StringIO containing a
+            terminal-style text representation. The text can include newlines
+            and ANSI escape sequences (e.g. for colors).
+    """
+    assert mode in ("rgb_array", "human", "ansi")
+
+    # Lazy initialization of different renderers.
+    if mode in ("rgb_array", "human"):
+      if not mode is self._renderer:
+        value_mapping = {
+            "P": (0, 0, 1),  # agent -> blue
+            "G": (0, 1, 0),  # goal -> green
+            "C": (1, 0, 0),  # catastrophe -> red
+            "*": (0, 0, 0),  # wall -> black
+            " ": (1, 1, 1),  # space -> white
+        }
+        self._renderer[mode] = ObservationToArray(
+            value_mapping,
+            dtype=np.float32,
+        )
+    elif mode is "ansi":
+      if not mode is self._renderer:
+        value_mapping = {x: x for x in ("P", "G", "C", "*", " ")}
+        self._renderer[mode] = ObservationToArray(
+            value_mapping,
+            dtype=np.float32,
+        )
+
+    # Apply transofrmations.
+    display = self._renderer[mode](self._game._board).swapaxes(0, 2)
+
+    # Renders or returns the display.
+    if mode is "human":
+      fig, ax = plt.subplots(figsize=(3.0, 3.0))
+      ax.imshow(display)
+      ax.grid(None)
+      ax.axis("off")
+      fig.tight_layout()
+      fig.show()
+    else:
+      return display
 
   @staticmethod
   def _board2state(board: Observation) -> np.ndarray:

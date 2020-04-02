@@ -18,7 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from typing import Optional
+from typing import Optional, Text
 
 import numpy as np
 import labmaze
@@ -26,7 +26,7 @@ from pycolab.engine import Engine
 from pycolab import ascii_art
 from pycolab import things as _things
 from pycolab.prefab_parts import sprites as prefab_sprites
-from pycolab.rendering import Observation, ObservationToFeatureArray
+from pycolab.rendering import Observation, ObservationToArray, ObservationToFeatureArray
 
 from . import defaults
 
@@ -35,7 +35,7 @@ def make_game(
     width: int = defaults.WIDTH,
     height: int = defaults.HEIGHT,
     max_rooms: int = defaults.MAX_ROOMS,
-    seed: int = defaults.SEED,
+    seed: Optional[int] = defaults.SEED,
     slippery_coefficient: float = defaults.SLIPPERY_COEFFICIENT,
     default_reward: float = defaults.DEFAULT_REWARD,
     goal_reward: float = defaults.GOAL_REWARD,
@@ -65,7 +65,7 @@ def make_game(
   maze.entity_layer[tuple(agent_positions[:, I_p])] = "P"
   # Keep only one goal.
   goal_positions = np.asarray(np.where(maze.entity_layer == "G"))
-  I_g, I_c = np.random.choice(goal_positions.shape[-1], size=2)
+  I_g, I_c = np.random.choice(goal_positions.shape[-1], size=2, replace=False)
   maze.entity_layer[maze.entity_layer == "G"] = " "
   maze.entity_layer[tuple(goal_positions[:, I_g])] = "G"
   maze.entity_layer[tuple(goal_positions[:, I_c])] = "C"
@@ -134,7 +134,7 @@ class AgentSprite(prefab_sprites.MazeWalker):
     )
     self._default_reward = default_reward
     self._slippery_coefficient = slippery_coefficient
-    self._rng = np.random.RandomState(seed) # pylint: disable=no-member
+    self._rng = np.random.RandomState(seed)  # pylint: disable=no-member
 
   def update(
       self,

@@ -41,9 +41,11 @@ timestep = env.reset()
 # RL loop:
 while not timestep.last():
   # Random action.
-  action env.action_spec().generate_value()
+  action = env.action_spec().generate_value()
   # Step in the simulator.
   timestep = env.step(action)
+  # Render video.
+  env.render(mode="human")
 ```
 
 ## Dependencies
@@ -53,3 +55,4 @@ The code was tested under Ubuntu 18.04 and macOS with the Miniconda Python distr
 * [`labmaze==1.0.2`](https://pypi.org/project/labmaze/1.0.2/)
 * [`dm-env==1.2`](https://pypi.org/project/dm-env/1.2/)
 * [`pycolab==1.2`](https://pypi.org/project/pycolab/1.2/)
+* [`matplotlib==3.2.1`](https://pypi.org/project/matplotlib/3.2.1/)
