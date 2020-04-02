@@ -164,7 +164,7 @@ class GridWorld(dm_env.Environment):
         value_mapping = {x: x for x in ("P", "G", "C", "*", " ")}
         self._renderer[mode] = ObservationToArray(
             value_mapping,
-            dtype=np.float32,
+            dtype=str,
         )
 
     # Apply transofrmations.
