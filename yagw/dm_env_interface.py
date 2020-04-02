@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import collections
 from typing import Optional, Text, Union
 
 import dm_env
@@ -36,7 +37,7 @@ class GridWorld(dm_env.Environment):
       max_steps_count: int = 50,
   ):
     """Initializes a new grid world environment.
-    
+
     Args:
       num_layouts: The number of distinct maze configurations,
         if `-1` then there is no limit.
@@ -87,7 +88,7 @@ class GridWorld(dm_env.Environment):
 
   def reset(self) -> dm_env.TimeStep:
     """Returns the first `TimeStep` of a new episode.
-    
+
     Returns:
       A `dm_env.Timestep`.
     """
@@ -105,10 +106,10 @@ class GridWorld(dm_env.Environment):
 
   def step(self, action: int) -> dm_env.TimeStep:
     """Updates the environment according to the action.
-    
+
     Args:
       action: The action taken by the agent in the game.
-    
+
     Returns:
       A `dm_env.Timestep`.
     """
@@ -131,7 +132,7 @@ class GridWorld(dm_env.Environment):
       mode: Text = "human",
   ) -> Optional[Union[np.ndarray, Text]]:
     """Renders the environment.
-    
+
     Args:
       mode: OpenAI Gym rendering modes:
         - `human`: render to the current display or terminal and
@@ -185,15 +186,16 @@ class GridWorld(dm_env.Environment):
   def _board2state(board: Observation) -> np.ndarray:
     """Converts the `pycolab.engine.Engine._board` to
     a binary tensor, its channel represents an object-type.
-    
+
     Args:
       board: A `namedtuple` with attributes:
         * `layers`, a dictionary with keys the character symbol and a boolean
         `[width, height]` mask,
         * `board`: a 2D array.
-    
+
     Returns:
       The game state in a binary tensor format, with shape
       `[channels, width, height]`.
     """
-    return ObservationToFeatureArray(board.layers)(board)
+    return ObservationToFeatureArray(
+        collections.OrderedDict(sorted(board.layers.items())))(board)
